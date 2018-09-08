@@ -11,10 +11,21 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema.define(version: 20180817110526) do
+ActiveRecord::Schema.define(version: 20180903112529) do
 
   create_table "busnums", force: :cascade do |t|
     t.string   "number"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+  end
+
+  create_table "users", force: :cascade do |t|
+    t.string   "key"
+    t.string   "one"
+    t.string   "two"
+    t.string   "three"
+    t.string   "four"
+    t.string   "five"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
   end

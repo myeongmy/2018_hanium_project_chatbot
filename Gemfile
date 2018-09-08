@@ -1,5 +1,6 @@
 source 'https://rubygems.org'
 
+gem 'rails_db'
 gem 'nokogiri'
 gem 'rest-client', '~>1.8.0'
 # Bundle edge Rails instead: gem 'rails', github: 'rails/rails'
