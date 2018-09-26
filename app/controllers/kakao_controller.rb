@@ -24,14 +24,16 @@ class KakaoController < ApplicationController
     end
   
   @@num = 0
+  @@last = 0
   
   def message
     @user_msg = params[:content]
+    
     if @user_msg == "시작하기" or @user_msg == "다시 시작하기"
       
       @msg = {
           message: {
-            text: "안녕하세요(하트뿅)\n서울시 버스와 지하철 운행 정보를 드립니다~\n\n1.버스 실시간 도착정보\n2.지하철 실시간 도착정보\n3.즐겨찾기\n\n이용하고 싶은 서비스를 선택해주세요!"
+            text: "안녕하세요(하트뿅)\n서울시 버스와 지하철 운행 정보를 드립니다~\n\n1.버스 실시간 도착정보\n2.지하철 실시간 도착정보\n3.즐겨찾기\n4.버스 배차 정보(ex. 막차시간)\n\n이용하고 싶은 서비스를 선택해주세요!"
           },keyboard:{
             type: "text"
           }
@@ -119,6 +121,56 @@ class KakaoController < ApplicationController
                  render json: @msg
                 
             end
+        else if @info == "4" or @info == "4번" and @@num != 3
+            @@last = 1
+             @msg = {
+                      message: {
+                      text: "버스번호를 입력해주세요(ex. 7737)"
+                     },keyboard:{
+                          type: "text"
+                          
+                     }
+                   }
+        
+                 render json: @msg
+        else if @@last == 1
+            @@last = 0
+            h = URI.encode(@info)
+           url1 = "http://ws.bus.go.kr/api/rest/busRouteInfo/getBusRouteList?serviceKey=ijltE9mKxrbB0HwVvtrvVB6kL3jPVePXQqS%2F1dNRz%2FjnTR3JMPjt1ZRLG3BOxUzRXhBbbF03lCDiBZsH2oJj2A%3D%3D&strSrch=#{h}"
+           
+            doc1 = Nokogiri::XML(open(url1))
+            @buses = doc1.xpath('//itemList').map do |i|
+             { :busRouteNm => i.xpath('busRouteNm').inner_text,
+               :edStationNm => i.xpath('edStationNm').inner_text,
+               :firstBusTm => i.xpath('firstBusTm').inner_text,
+               :lastBusTm => i.xpath('lastBusTm').inner_text,
+               :stStationNm => i.xpath('stStationNm').inner_text,
+               :term => i.xpath('term').inner_text
+             }
+            end
+            
+            f = @buses.first[:firstBusTm]
+            f_clock = f[8..9]
+            f_min = f[10..11]
+            
+            e = @buses.first[:lastBusTm]
+            e_clock = e[8..9]
+            e_min = e[10..11]
+            
+             @msg = {
+                      message: {
+                      text: "(별)버스번호 : #{@buses.first[:busRouteNm]}\n\n출발점 : #{@buses.first[:stStationNm]}\n종점 : #{@buses.first[:edStationNm]}\n배차간격 : #{@buses.first[:term]}분\n첫차시간 : #{f_clock}시 #{f_min}분\n막차시간 : #{e_clock}시 #{e_min}분 "
+                     },keyboard:{
+                          type: "buttons",
+                          buttons: ["다시 시작하기"]
+                          
+                     }
+                   }
+        
+                 render json: @msg
+            
+            
+                
         else if @info == "즐겨찾기에 추가"
             
             if @user.one == nil
@@ -251,8 +303,8 @@ class KakaoController < ApplicationController
             if @buses.count == 1
              id = @buses.first[:busRouteId]
             else
-              
-            @buses.each do |b|
+              ses.each do |b|
+            @bu
                 if b[:busRouteNm] == @num
                     id = b[:busRouteId]
                     break
@@ -795,6 +847,8 @@ class KakaoController < ApplicationController
             render json: @msg
     end
        
+end
+end
 end
 end
 end
